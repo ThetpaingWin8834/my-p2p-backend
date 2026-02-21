@@ -2,6 +2,7 @@ import http, { IncomingMessage, ServerResponse } from 'http';
 import fs from 'fs';
 import { AuthService } from './services/AuthService';
 import { SqliteUserRepository } from './repositories/SqliteUserRepository';
+import { ApiResponse } from './utils/api_response';
 const userRepo = new SqliteUserRepository();
 const authService = new AuthService(userRepo);
 
@@ -15,10 +16,10 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const { username,name, password } = JSON.parse(body);
-        await authService.signUp(username, name,password);
-        res.writeHead(201).end('User created');
+       const user = await authService.signUp(username, name,password);
+        res.writeHead(201).end(ApiResponse.success(user,'User created').asJsonString());
       } catch (e: any) {
-        res.writeHead(400).end(e.message);
+        res.writeHead(500).end(ApiResponse.error(e.message,500).asJsonString());
       }
     });
   }else{
